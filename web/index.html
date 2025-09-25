@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compressor - Multi-Platform Image Compression Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-card li {
+            padding: 0.3rem 0;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .feature-card li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            margin: 1rem 0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-github {
+            background: #333;
+        }
+
+        .btn-github:hover {
+            background: #222;
+        }
+
+        .installation-steps {
+            counter-reset: step;
+        }
+
+        .installation-steps > div {
+            counter-increment: step;
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .installation-steps > div::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .tech-item {
+            background: #e9ecef;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ Compressor</h1>
+            <p>Multi-Platform Image Compression Tool</p>
+        </header>
+
+        <div class="card">
+            <h2>🎯 Überblick</h2>
+            <p>Compressor ist ein leistungsstarkes Bildkompressions-Tool, das in zwei Versionen verfügbar ist:</p>
+            <ul style="margin: 1rem 0; padding-left: 2rem;">
+                <li><strong>Web Version</strong> - Browser-basierte Anwendung mit Express-Server</li>
+                <li><strong>GUI Version</strong> - Cross-Platform Desktop-Anwendung mit Electron</li>
+            </ul>
+            <p>Beide Versionen bieten moderne Benutzeroberfläche, Drag & Drop Unterstützung und hochperformante Bildverarbeitung mit Sharp.</p>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>🌐 Web Version</h3>
+                <ul>
+                    <li>Multi-Format Support (JPEG, PNG, WebP)</li>
+                    <li>Einstellbare Komprimierungsqualität</li>
+                    <li>Cluster-Processing für Multi-Core CPUs</li>
+                    <li>Live-Statistiken und Progress-Anzeige</li>
+                    <li>Responsive Design für alle Geräte</li>
+                    <li>Single-File EXE für Windows</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>🖥️ GUI Version</h3>
+                <ul>
+                    <li>Cross-Platform (Windows, macOS, Linux)</li>
+                    <li>Native Desktop Experience</li>
+                    <li>Integrierter Express-Server</li>
+                    <li>Multi-File Batch-Verarbeitung</li>
+                    <li>ZIP/Folder Download Optionen</li>
+                    <li>Offline-fähig</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚀 Schnellstart</h2>
+            <div class="installation-steps">
+                <div>
+                    <strong>Dependencies installieren</strong>
+                    <div class="code-block">pnpm install</div>
+                </div>
+
+                <div>
+                    <strong>Web Version starten</strong>
+                    <div class="code-block">pnpm run start:standalone</div>
+                    <p>Öffnet http://localhost:3005 im Browser</p>
+                </div>
+
+                <div>
+                    <strong>GUI Version starten</strong>
+                    <div class="code-block">pnpm run electron</div>
+                    <p>Startet die Electron Desktop-Anwendung</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🛠️ Build für Distribution</h2>
+            <h3>Web Version (Windows EXE)</h3>
+            <div class="code-block">pnpm run build:win</div>
+
+            <h3>GUI Version (Electron)</h3>
+            <div class="btn-group">
+                <button class="btn" onclick="showCode('win')">Windows</button>
+                <button class="btn" onclick="showCode('mac')">macOS</button>
+                <button class="btn" onclick="showCode('linux')">Linux</button>
+            </div>
+            <div id="build-code"></div>
+        </div>
+
+        <div class="card">
+            <h2>💻 Technologie-Stack</h2>
+            <div class="tech-stack">
+                <span class="tech-item">Node.js</span>
+                <span class="tech-item">Express.js</span>
+                <span class="tech-item">Electron</span>
+                <span class="tech-item">Sharp</span>
+                <span class="tech-item">Cluster</span>
+                <span class="tech-item">Multer</span>
+                <span class="tech-item">Bull Queue</span>
+                <span class="tech-item">PKG</span>
+                <span class="tech-item">Electron Builder</span>
+                <span class="tech-item">PNPM</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔗 Links & Ressourcen</h2>
+            <div class="btn-group">
+                <a href="https://github.com/marius4lui/Compressor" class="btn btn-github" target="_blank">
+                    📂 GitHub Repository
+                </a>
+                <a href="https://github.com/marius4lui/Compressor/pull/1" class="btn" target="_blank">
+                    🔄 Pull Request #1
+                </a>
+                <a href="https://github.com/marius4lui/Compressor/blob/main/README.md" class="btn" target="_blank">
+                    📖 Vollständige Dokumentation
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Aktuelle Entwicklung</h2>
+            <p>Derzeit wird die GUI Version mit Electron entwickelt. Diese Version bietet:</p>
+            <ul style="margin: 1rem 0; padding-left: 2rem;">
+                <li>Native Desktop-Erfahrung</li>
+                <li>Verbesserte Multi-File Unterstützung</li>
+                <li>Batch-Download als ZIP oder Ordner</li>
+                <li>Bessere Performance durch lokale Server-Integration</li>
+                <li>System-Notifications und Menüs</li>
+            </ul>
+            <p><strong>Status:</strong> GUI Branch ist fertig und bereit für Merge nach Main</p>
+        </div>
+
+        <footer>
+            <p>Entwickelt mit ❤️ von marius4lui</p>
+            <p>Lizenz: MIT</p>
+        </footer>
+    </div>
+
+    <script>
+        function showCode(platform) {
+            const codeBlock = document.getElementById('build-code');
+            const commands = {
+                win: 'pnpm run build:electron:win',
+                mac: 'pnpm run build:electron:mac',
+                linux: 'pnpm run build:electron:linux'
+            };
+
+            codeBlock.innerHTML = `<div class="code-block">${commands[platform]}</div>`;
+        }
+
+        // Smooth scrolling für Anker-Links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
