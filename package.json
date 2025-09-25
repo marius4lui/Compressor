@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Windows-EXE für Bildkompression mit Express, Cluster, Multer, Sharp und Bull-Queue",
   "main": "main.js",
+  "bin": "server-standalone.js",
   "scripts": {
     "start": "electron .",
     "start:standalone": "node server-standalone.js",
