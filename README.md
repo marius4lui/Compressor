@@ -46,10 +46,25 @@ pnpm run electron
 ### Schritt 3: Build für Distribution
 
 **Windows EXE (Web Version):**
+
+**Option 1: Automatischer Build via GitHub Actions**
+```bash
+# Erstelle und pushe ein Versionstag
+git tag v1.0.0
+git push origin v1.0.0
+```
+GitHub Actions wird automatisch:
+- Die Windows EXE bauen
+- Ein neues Release erstellen
+- Die EXE als Release-Asset hochladen
+
+**Option 2: Lokaler Build**
 ```bash
 pnpm run build:win
 ```
-*Oder direkt herunterladen:* [Bildkompressor Setup 1.0.0.exe](https://supabase.qhrd.online/storage/v1/object/public/compressor//Bildkompressor%20Setup%201.0.0.exe) (~156 MB)
+
+**Option 3: Direkter Download**
+[Bildkompressor Setup 1.0.0.exe](https://supabase.qhrd.online/storage/v1/object/public/compressor//Bildkompressor%20Setup%201.0.0.exe) (~156 MB)
 
 **Electron App (Alle Plattformen):**
 ```bash
@@ -248,8 +263,30 @@ pnpm run electron:dev
 
 MIT License - Siehe LICENSE Datei für Details
 
+## 🔄 GitHub Releases
+
+Das Projekt nutzt GitHub Actions für automatisierte Releases der Windows EXE:
+
+### Release-Prozess
+1. **Tag erstellen**: `git tag v1.0.0`
+2. **Tag pushen**: `git push origin v1.0.0`
+3. **Automatischer Build**: GitHub Actions:
+   - Baut die Windows EXE mit pkg
+   - Erstellt ein neues Release
+   - Lädt die EXE als Asset hoch
+
+### Releases ansehen
+Alle Releases sind verfügbar im [GitHub Releases Tab](https://github.com/marius4lui/Compressor/releases)
+
+### Release-Workflow
+- Trigger: Push von Tags im Format `v*.*.*`
+- Build-Umgebung: Windows Latest
+- Node.js Version: 18
+- Output: `dist/compressor.exe`
+
 ## 🔗 Links
 
 - **GitHub Repository**: https://github.com/marius4lui/Compressor
 - **Pull Request**: https://github.com/marius4lui/Compressor/pull/1
+- **GitHub Releases**: https://github.com/marius4lui/Compressor/releases
 - **Live Demo**: Web-Version unter http://localhost:3005 nach `pnpm run start:standalone`

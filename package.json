@@ -8,7 +8,8 @@
     "start:standalone": "node server-standalone.js",
     "dev": "nodemon server-standalone.js",
     "dev:electron": "electron . --dev",
-    "build:win": "electron-builder --win",
+    "build:electron:win": "electron-builder --win",
+    "build:win": "pkg . --targets node18-win-x64 --output dist/compressor.exe",
     "build": "pnpm run build:win",
     "test": "echo \"No tests specified\" && exit 0"
   },
