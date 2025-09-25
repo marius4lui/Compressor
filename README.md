@@ -49,6 +49,7 @@ pnpm run electron
 ```bash
 pnpm run build:win
 ```
+*Oder direkt herunterladen:* [Bildkompressor Setup 1.0.0.exe](https://supabase.qhrd.online/storage/v1/object/public/compressor//Bildkompressor%20Setup%201.0.0.exe) (~156 MB)
 
 **Electron App (Alle Plattformen):**
 ```bash
