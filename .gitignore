@@ -1,0 +1,11 @@
+# Node modules
+node_modules/
+
+# lokale Claude-Einstellungen
+.claude/settings.local.json
+
+# optional: OS/IDE-Dateien
+.DS_Store
+Thumbs.db
+.vscode/
+.env

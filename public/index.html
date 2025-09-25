@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bildkompressor - Komprimiere deine Bilder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .upload-section {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: border-color 0.3s ease;
+        }
+
+        .upload-section.dragover {
+            border-color: #4facfe;
+            background-color: #f8f9ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .setting-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .setting-group select,
+        .setting-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .progress-section {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e1e5e9;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .results-section {
+            display: none;
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .download-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+        }
+
+        .error-section {
+            display: none;
+            background: #ffe6e6;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #f44336;
+            color: #d32f2f;
+            margin-bottom: 20px;
+        }
+
+        .queue-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .settings {
+                grid-template-columns: 1fr;
+            }
+
+            .result-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ Bildkompressor</h1>
+            <p>Komprimiere deine Bilder schnell und effizient</p>
+        </div>
+
+        <div class="content">
+            <form id="uploadForm">
+                <div class="upload-section" id="uploadArea">
+                    <h3>📁 Bild zum Komprimieren auswählen</h3>
+                    <p>Drag & Drop oder klicke zum Auswählen</p>
+                    <br>
+                    <input type="file" id="imageInput" class="file-input" accept="image/*" required>
+                    <button type="button" class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                        Datei auswählen
+                    </button>
+                    <div id="fileName" style="margin-top: 15px; font-weight: bold;"></div>
+                </div>
+
+                <div class="settings">
+                    <div class="setting-group">
+                        <label for="quality">🎚️ Qualität (%)</label>
+                        <input type="range" id="quality" name="quality" min="10" max="100" value="80">
+                        <span id="qualityValue">80%</span>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="format">📁 Format</label>
+                        <select id="format" name="format">
+                            <option value="jpeg">JPEG</option>
+                            <option value="webp">WebP</option>
+                            <option value="png">PNG</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="upload-btn" style="width: 100%; margin-bottom: 20px;">
+                    🚀 Bild komprimieren
+                </button>
+            </form>
+
+            <div class="error-section" id="errorSection">
+                <h3>❌ Fehler</h3>
+                <p id="errorMessage"></p>
+            </div>
+
+            <div class="progress-section" id="progressSection">
+                <h3>⏳ Verarbeitung läuft...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Bild wird hochgeladen...</p>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <h3>✅ Komprimierung abgeschlossen!</h3>
+                <div class="result-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="originalSize">0 KB</div>
+                        <div class="stat-label">Originalgröße</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="compressedSize">0 KB</div>
+                        <div class="stat-label">Komprimiert</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="savings">0%</div>
+                        <div class="stat-label">Ersparnis</div>
+                    </div>
+                </div>
+                <button class="download-btn" id="downloadBtn">
+                    💾 Komprimiertes Bild herunterladen
+                </button>
+            </div>
+
+            <div class="queue-stats" id="queueStats">
+                <strong>📊 Server-Status:</strong>
+                <span id="statsText">Lade Status...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentJobId = null;
+
+        // Elements
+        const uploadForm = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('imageInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileName = document.getElementById('fileName');
+        const qualitySlider = document.getElementById('quality');
+        const qualityValue = document.getElementById('qualityValue');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Quality slider update
+        qualitySlider.addEventListener('input', function() {
+            qualityValue.textContent = this.value + '%';
+        });
+
+        // File input change
+        imageInput.addEventListener('change', function() {
+            if (this.files[0]) {
+                fileName.textContent = `📄 ${this.files[0].name}`;
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                imageInput.files = files;
+                fileName.textContent = `📄 ${files[0].name}`;
+            }
+        });
+
+        // Form submission
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!imageInput.files[0]) {
+                showError('Bitte wähle ein Bild aus!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+            formData.append('quality', qualitySlider.value);
+            formData.append('format', document.getElementById('format').value);
+
+            hideAllSections();
+            showProgress('Bild wird hochgeladen...', 10);
+
+            try {
+                const response = await fetch('/compress', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Upload-Fehler');
+                }
+
+                currentJobId = result.jobId;
+                pollJobStatus();
+
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Poll job status
+        async function pollJobStatus() {
+            if (!currentJobId) return;
+
+            try {
+                const response = await fetch(`/status/${currentJobId}`);
+                const status = await response.json();
+
+                if (status.status === 'queued') {
+                    showProgress('In Warteschlange...', 20);
+                } else if (status.status === 'processing') {
+                    showProgress('Bild wird komprimiert...', 60);
+                } else if (status.status === 'completed') {
+                    showResults(status.result);
+                    return;
+                } else if (status.status === 'failed') {
+                    throw new Error(status.error || 'Verarbeitung fehlgeschlagen');
+                }
+
+                setTimeout(pollJobStatus, 1000);
+
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Show progress
+        function showProgress(text, percentage) {
+            progressSection.style.display = 'block';
+            progressText.textContent = text;
+            progressFill.style.width = percentage + '%';
+        }
+
+        // Show results
+        function showResults(result) {
+            hideAllSections();
+            resultsSection.style.display = 'block';
+
+            document.getElementById('originalSize').textContent = formatFileSize(result.originalSize);
+            document.getElementById('compressedSize').textContent = formatFileSize(result.compressedSize);
+            document.getElementById('savings').textContent = result.compressionRatio + '%';
+
+            downloadBtn.onclick = function() {
+                window.open(`/download/${currentJobId}`, '_blank');
+            };
+        }
+
+        // Show error
+        function showError(message) {
+            hideAllSections();
+            errorSection.style.display = 'block';
+            errorMessage.textContent = message;
+        }
+
+        // Hide all sections
+        function hideAllSections() {
+            progressSection.style.display = 'none';
+            resultsSection.style.display = 'none';
+            errorSection.style.display = 'none';
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Update queue stats
+        async function updateQueueStats() {
+            try {
+                const response = await fetch('/queue-stats');
+                const stats = await response.json();
+
+                document.getElementById('statsText').textContent =
+                    `Warteschlange: ${stats.waiting} | Aktiv: ${stats.active} | Worker: ${stats.workers}`;
+            } catch (error) {
+                document.getElementById('statsText').textContent = 'Status nicht verfügbar';
+            }
+        }
+
+        // Initial stats update and interval
+        updateQueueStats();
+        setInterval(updateQueueStats, 5000);
+    </script>
+</body>
+</html>
