@@ -228,14 +228,15 @@
         <div class="content">
             <form id="uploadForm">
                 <div class="upload-section" id="uploadArea">
-                    <h3>📁 Bild zum Komprimieren auswählen</h3>
-                    <p>Drag & Drop oder klicke zum Auswählen</p>
+                    <h3>📁 Bilder zum Komprimieren auswählen</h3>
+                    <p>Drag & Drop oder klicke zum Auswählen (mehrere Dateien möglich)</p>
                     <br>
-                    <input type="file" id="imageInput" class="file-input" accept="image/*" required>
+                    <input type="file" id="imageInput" class="file-input" accept="image/*" multiple required>
                     <button type="button" class="upload-btn" onclick="document.getElementById('imageInput').click()">
-                        Datei auswählen
+                        Dateien auswählen
                     </button>
                     <div id="fileName" style="margin-top: 15px; font-weight: bold;"></div>
+                    <button type="button" id="clearFilesBtn" style="display: none; margin-top: 10px; background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">Auswahl löschen</button>
                 </div>
 
                 <div class="settings">
@@ -255,8 +256,16 @@
                     </div>
                 </div>
 
+                <div class="setting-group" style="margin-bottom: 20px;">
+                    <label for="downloadType">📦 Download-Format</label>
+                    <select id="downloadType" name="downloadType">
+                        <option value="folder">Ordner (Standard)</option>
+                        <option value="zip">ZIP-Archiv</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="upload-btn" style="width: 100%; margin-bottom: 20px;">
-                    🚀 Bild komprimieren
+                    🚀 <span id="compressButtonText">Bilder komprimieren</span>
                 </button>
             </form>
 
@@ -270,27 +279,32 @@
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <p id="progressText">Bild wird hochgeladen...</p>
+                <p id="progressText">Bilder werden hochgeladen...</p>
+                <div id="jobList" style="max-height: 200px; overflow-y: auto; margin-top: 15px;"></div>
             </div>
 
             <div class="results-section" id="resultsSection">
                 <h3>✅ Komprimierung abgeschlossen!</h3>
+                <div id="completedJobs" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
                 <div class="result-stats">
                     <div class="stat-box">
                         <div class="stat-value" id="originalSize">0 KB</div>
-                        <div class="stat-label">Originalgröße</div>
+                        <div class="stat-label">Gesamt Original</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-value" id="compressedSize">0 KB</div>
-                        <div class="stat-label">Komprimiert</div>
+                        <div class="stat-label">Gesamt Komprimiert</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-value" id="savings">0%</div>
-                        <div class="stat-label">Ersparnis</div>
+                        <div class="stat-label">Durchschnitt Ersparnis</div>
                     </div>
                 </div>
-                <button class="download-btn" id="downloadBtn">
-                    💾 Komprimiertes Bild herunterladen
+                <button class="download-btn" id="downloadAllBtn" style="margin-bottom: 10px;">
+                    📦 Alle als <span id="downloadTypeText">Ordner</span> herunterladen
+                </button>
+                <button class="upload-btn" id="newJobBtn" style="width: 100%; background: #2196F3;">
+                    🆕 Neue Bilder komprimieren
                 </button>
             </div>
 
@@ -326,10 +340,51 @@
 
         // File input change
         imageInput.addEventListener('change', function() {
-            if (this.files[0]) {
-                fileName.textContent = `📄 ${this.files[0].name}`;
+            updateFileDisplay();
+        });
+
+        // Clear files button
+        clearFilesBtn.addEventListener('click', function() {
+            imageInput.value = '';
+            updateFileDisplay();
+        });
+
+        // Download type change
+        downloadType.addEventListener('change', function() {
+            downloadTypeText.textContent = this.value === 'zip' ? 'ZIP-Archiv' : 'Ordner';
+        });
+
+        // New job button
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'newJobBtn') {
+                resetForm();
             }
         });
+
+        function updateFileDisplay() {
+            const files = imageInput.files;
+            if (files.length > 0) {
+                if (files.length === 1) {
+                    fileName.textContent = `📄 ${files[0].name}`;
+                } else {
+                    fileName.textContent = `📄 ${files.length} Dateien ausgewählt`;
+                }
+                clearFilesBtn.style.display = 'inline-block';
+                compressButtonText.textContent = files.length === 1 ? 'Bild komprimieren' : `${files.length} Bilder komprimieren`;
+            } else {
+                fileName.textContent = '';
+                clearFilesBtn.style.display = 'none';
+                compressButtonText.textContent = 'Bilder komprimieren';
+            }
+        }
+
+        function resetForm() {
+            imageInput.value = '';
+            updateFileDisplay();
+            hideAllSections();
+            currentJobs = [];
+            completedJobs = [];
+        }
 
         // Drag and drop
         uploadArea.addEventListener('dragover', function(e) {
@@ -347,9 +402,13 @@
             this.classList.remove('dragover');
 
             const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.startsWith('image/')) {
-                imageInput.files = files;
-                fileName.textContent = `📄 ${files[0].name}`;
+            const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+            if (imageFiles.length > 0) {
+                // Create new FileList
+                const dt = new DataTransfer();
+                imageFiles.forEach(file => dt.items.add(file));
+                imageInput.files = dt.files;
+                updateFileDisplay();
             }
         });
 
@@ -357,59 +416,102 @@
         uploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            if (!imageInput.files[0]) {
-                showError('Bitte wähle ein Bild aus!');
+            const files = imageInput.files;
+            if (!files.length) {
+                showError('Bitte wähle mindestens ein Bild aus!');
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('image', imageInput.files[0]);
-            formData.append('quality', qualitySlider.value);
-            formData.append('format', document.getElementById('format').value);
+            currentJobs = [];
+            completedJobs = [];
 
             hideAllSections();
-            showProgress('Bild wird hochgeladen...', 10);
+            showProgress('Bilder werden hochgeladen...', 10);
+            updateJobList([]);
+
+            // Upload alle Dateien parallel
+            const uploadPromises = Array.from(files).map((file, index) => uploadFile(file, index));
 
             try {
-                const response = await fetch('/compress', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || 'Upload-Fehler');
-                }
-
-                currentJobId = result.jobId;
-                pollJobStatus();
-
+                await Promise.all(uploadPromises);
+                pollAllJobsStatus();
             } catch (error) {
                 showError(error.message);
             }
         });
 
-        // Poll job status
-        async function pollJobStatus() {
-            if (!currentJobId) return;
+        async function uploadFile(file, index) {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('quality', qualitySlider.value);
+            formData.append('format', document.getElementById('format').value);
+
+            const response = await fetch('/compress', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(`${file.name}: ${result.error || 'Upload-Fehler'}`);
+            }
+
+            currentJobs.push({
+                jobId: result.jobId,
+                filename: result.filename,
+                status: 'uploaded',
+                index: index
+            });
+        }
+
+        // Poll all jobs status
+        async function pollAllJobsStatus() {
+            if (!currentJobs.length) return;
 
             try {
-                const response = await fetch(`/status/${currentJobId}`);
-                const status = await response.json();
+                const statusPromises = currentJobs.map(job =>
+                    fetch(`/status/${job.jobId}`).then(res => res.json())
+                );
 
-                if (status.status === 'queued') {
-                    showProgress('In Warteschlange...', 20);
-                } else if (status.status === 'processing') {
-                    showProgress('Bild wird komprimiert...', 60);
-                } else if (status.status === 'completed') {
-                    showResults(status.result);
+                const statuses = await Promise.all(statusPromises);
+
+                let allCompleted = true;
+                let totalProcessing = 0;
+
+                statuses.forEach((status, index) => {
+                    const job = currentJobs[index];
+                    job.status = status.status;
+
+                    if (status.status === 'completed') {
+                        if (!completedJobs.find(cj => cj.jobId === job.jobId)) {
+                            completedJobs.push({ ...job, result: status.result });
+                        }
+                    } else if (status.status === 'processing') {
+                        totalProcessing++;
+                        allCompleted = false;
+                    } else if (status.status === 'queued' || status.status === 'waiting') {
+                        allCompleted = false;
+                    } else if (status.status === 'failed') {
+                        showError(`${job.filename}: ${status.error || 'Verarbeitung fehlgeschlagen'}`);
+                        return;
+                    }
+                });
+
+                updateJobList(currentJobs);
+
+                if (allCompleted && completedJobs.length > 0) {
+                    showAllResults();
                     return;
-                } else if (status.status === 'failed') {
-                    throw new Error(status.error || 'Verarbeitung fehlgeschlagen');
                 }
 
-                setTimeout(pollJobStatus, 1000);
+                const progress = Math.min(90, 20 + (completedJobs.length / currentJobs.length) * 60);
+                const processingText = totalProcessing > 0 ?
+                    `${totalProcessing} Bilder werden komprimiert...` :
+                    `${completedJobs.length}/${currentJobs.length} abgeschlossen...`;
+                showProgress(processingText, progress);
+
+                setTimeout(pollAllJobsStatus, 1000);
 
             } catch (error) {
                 showError(error.message);
@@ -423,18 +525,94 @@
             progressFill.style.width = percentage + '%';
         }
 
-        // Show results
-        function showResults(result) {
+        // Show all results
+        function showAllResults() {
             hideAllSections();
             resultsSection.style.display = 'block';
 
-            document.getElementById('originalSize').textContent = formatFileSize(result.originalSize);
-            document.getElementById('compressedSize').textContent = formatFileSize(result.compressedSize);
-            document.getElementById('savings').textContent = result.compressionRatio + '%';
+            // Gesamtstatistiken berechnen
+            let totalOriginal = 0;
+            let totalCompressed = 0;
 
-            downloadBtn.onclick = function() {
-                window.open(`/download/${currentJobId}`, '_blank');
+            completedJobs.forEach(job => {
+                totalOriginal += job.result.originalSize;
+                totalCompressed += job.result.compressedSize;
+            });
+
+            const avgSavings = completedJobs.length > 0 ?
+                (completedJobs.reduce((sum, job) => sum + parseFloat(job.result.compressionRatio), 0) / completedJobs.length).toFixed(1) : 0;
+
+            document.getElementById('originalSize').textContent = formatFileSize(totalOriginal);
+            document.getElementById('compressedSize').textContent = formatFileSize(totalCompressed);
+            document.getElementById('savings').textContent = avgSavings + '%';
+
+            // Einzelne Jobs anzeigen
+            displayCompletedJobs();
+
+            document.getElementById('downloadAllBtn').onclick = function() {
+                downloadAll();
             };
+        }
+
+        function displayCompletedJobs() {
+            const completedJobsContainer = document.getElementById('completedJobs');
+            completedJobsContainer.innerHTML = '';
+
+            completedJobs.forEach(job => {
+                const jobDiv = document.createElement('div');
+                jobDiv.style.cssText = 'background: white; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;';
+
+                jobDiv.innerHTML = `
+                    <div>
+                        <strong>📄 ${job.result.filename}</strong><br>
+                        <small>${formatFileSize(job.result.originalSize)} → ${formatFileSize(job.result.compressedSize)} (-${job.result.compressionRatio}%)</small>
+                    </div>
+                    <button onclick="downloadSingle(${job.jobId})" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
+                        💾 Download
+                    </button>
+                `;
+
+                completedJobsContainer.appendChild(jobDiv);
+            });
+        }
+
+        function downloadSingle(jobId) {
+            window.open(`/download/${jobId}`, '_blank');
+        }
+
+        function downloadAll() {
+            if (document.getElementById('downloadType').value === 'zip') {
+                // ZIP-Download implementieren
+                const jobIds = completedJobs.map(job => job.jobId);
+                window.open(`/download-all?jobs=${jobIds.join(',')}&type=zip`, '_blank');
+            } else {
+                // Einzelne Downloads für Ordner-Simulation
+                completedJobs.forEach(job => {
+                    setTimeout(() => downloadSingle(job.jobId), 100);
+                });
+            }
+        }
+
+        function updateJobList(jobs) {
+            const jobListContainer = document.getElementById('jobList');
+            if (!jobs.length) {
+                jobListContainer.innerHTML = '';
+                return;
+            }
+
+            jobListContainer.innerHTML = jobs.map(job => {
+                let statusIcon = '📋';
+                let statusText = job.status;
+
+                if (job.status === 'completed') statusIcon = '✅';
+                else if (job.status === 'processing') statusIcon = '⏳';
+                else if (job.status === 'queued' || job.status === 'waiting') statusIcon = '📋';
+                else if (job.status === 'failed') statusIcon = '❌';
+
+                return `<div style="background: #f9f9f9; padding: 5px; margin: 2px 0; border-radius: 3px; font-size: 0.9em;">
+                    ${statusIcon} ${job.filename} - ${statusText}
+                </div>`;
+            }).join('');
         }
 
         // Show error

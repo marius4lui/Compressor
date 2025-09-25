@@ -6,8 +6,9 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
+const archiver = require('archiver');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 const numCPUs = os.cpus().length;
 
 // In-Memory Queue für Single-EXE Deployment (ohne Redis)
@@ -220,6 +221,62 @@ if (cluster.isMaster && numCPUs > 1) {
         });
 
         res.send(result.buffer);
+    });
+
+    app.get('/download-all', (req, res) => {
+        const { jobs, type } = req.query;
+
+        if (!jobs) {
+            return res.status(400).json({ error: 'Keine Jobs angegeben' });
+        }
+
+        const jobIds = jobs.split(',').map(id => parseInt(id));
+        const completedJobs = jobIds.map(id => imageQueue.getJob(id)).filter(job => job && job.status === 'completed');
+
+        if (!completedJobs.length) {
+            return res.status(404).json({ error: 'Keine abgeschlossenen Jobs gefunden' });
+        }
+
+        if (type === 'zip') {
+            // ZIP-Download
+            const archive = archiver('zip', { zlib: { level: 9 }});
+            const zipFilename = `compressed_images_${Date.now()}.zip`;
+
+            res.set({
+                'Content-Type': 'application/zip',
+                'Content-Disposition': `attachment; filename="${zipFilename}"`
+            });
+
+            archive.pipe(res);
+
+            completedJobs.forEach(job => {
+                const result = job.result;
+                const filename = path.parse(result.filename).name + '_compressed.' + result.format;
+                archive.append(result.buffer, { name: filename });
+            });
+
+            archive.finalize();
+        } else {
+            // Ordner-Download (TAR für bessere Ordnerstruktur)
+            const archiver = require('archiver');
+            const archive = archiver('tar', { gzip: true });
+            const tarFilename = `compressed_images_${Date.now()}.tar.gz`;
+
+            res.set({
+                'Content-Type': 'application/gzip',
+                'Content-Disposition': `attachment; filename="${tarFilename}"`
+            });
+
+            archive.pipe(res);
+
+            completedJobs.forEach(job => {
+                const result = job.result;
+                const filename = path.parse(result.filename).name + '_compressed.' + result.format;
+                archive.append(result.buffer, { name: `compressed_images/${filename}` });
+            });
+
+            archive.finalize();
+        }
     });
 
     app.get('/queue-stats', async (req, res) => {

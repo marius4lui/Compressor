@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 const numCPUs = os.cpus().length;
 
 if (cluster.isMaster) {
