@@ -2,12 +2,15 @@
   "name": "bildkompressor",
   "version": "1.0.0",
   "description": "Windows-EXE für Bildkompression mit Express, Cluster, Multer, Sharp und Bull-Queue",
-  "main": "server.js",
+  "main": "main.js",
+  "bin": "server-standalone.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "electron .",
     "start:standalone": "node server-standalone.js",
     "dev": "nodemon server-standalone.js",
-    "build:win": "node build-exe.js",
+    "dev:electron": "electron . --dev",
+    "build:electron:win": "electron-builder --win",
+    "build:win": "pkg . --targets node18-win-x64 --output dist/compressor.exe",
     "build": "pnpm run build:win",
     "test": "echo \"No tests specified\" && exit 0"
   },
@@ -31,6 +34,8 @@
     "sharp": "^0.34.4"
   },
   "devDependencies": {
+    "electron": "^38.1.2",
+    "electron-builder": "^26.0.12",
     "nodemon": "^3.0.2",
     "pkg": "^5.8.1"
   },
@@ -45,5 +50,29 @@
   },
   "engines": {
     "node": ">=16.0.0"
+  },
+  "build": {
+    "appId": "com.bildkompressor.app",
+    "productName": "Bildkompressor",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "main.js",
+      "public/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/favicon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Bildkompressor"
+    }
   }
 }
